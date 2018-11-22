@@ -1,0 +1,53 @@
+body {
+    font-family: "Open Sans", sans-serif;
+    font-size: 1em;
+  }
+  .heatmap {
+    font-family: Helvetica, Arial, _sans; 
+    font-size: 2em; 
+  }
+  .heatmap text {
+    font: 16px sans-serif;
+  }
+  #heading {
+    text-align: center;
+    font-size: 1.8em;
+    padding: 20px;
+    font-weight: bold;
+  }
+  #description {
+    text-align: center;
+    font-size: 1.2em;
+  }
+  #legend {
+    text-align: center;
+  }
+  .cell:hover {
+    stroke-width: 3;
+    stroke: black;
+  }
+  .axis text {
+    font: 14px sans-serif;
+  }
+  
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+  }
+  
+  #tooltip {
+    position: absolute;
+    text-align: center;
+    width: 150px;
+    height: 80px;
+    padding: 2px;
+    font: 14px sans-serif;
+    background: lightsteelblue;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+  }
+
+  
