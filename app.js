@@ -5,7 +5,7 @@ url =
 
 const CELSIUS = "\u{2103}";
 
-var months = [
+const months = [
     "January",
     "February",
     "March",
@@ -21,20 +21,23 @@ var months = [
 ];
 
 // Define the div for the tooltip
-var tooltip = d3
+const tooltip = d3
     .select("body")
     .append("div")
     .attr("id", "tooltip")
     .style("opacity", 0);
 
+// get data
 d3.json(url).then(function (data) {
-    var baseTemp = data.baseTemperature;
-    var plotData = data.monthlyVariance;
+    //get base temperature from data
+    const baseTemp = data.baseTemperature;
+    // get array of monthly variances 
+    const plotData = data.monthlyVariance;
+    // determine the range of years the data is for
+    const yearRange = d3.extent(plotData, d => d.year);
 
-    var yearRange = d3.extent(plotData, d => d.year);
-
-    // Set Description
-    var desc = d3
+    // Set Description for webpage
+    d3
         .select("#description")
         .append("text")
         .style("text-anchor", "middle")
@@ -43,13 +46,14 @@ d3.json(url).then(function (data) {
         `);
 
     // dimension of heatmap
-    var margin = { top: 60, right: 20, bottom: 20, left: 100 };
-    var cellWidth = 5;
-    var cellHeight = 43;
-    var width = cellWidth * (yearRange[1] - yearRange[0]);
-    var height = 12 * cellHeight;
+    const margin = { top: 60, right: 20, bottom: 20, left: 200 };
+    const cellWidth = 5;
+    const cellHeight = 43;
+    const width = cellWidth * (yearRange[1] - yearRange[0]);
+    const height = 12 * cellHeight;
 
-    var heatmap = d3
+    // create heatmap
+    const heatmap = d3
         .select(".heatmap")
         .append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -57,17 +61,21 @@ d3.json(url).then(function (data) {
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    var xScale = d3
+    // creat scale for X axis
+    const xScale = d3
         .scaleLinear()
         .domain([yearRange[0], yearRange[1]])
         .range([0, width]);
 
-    // create the x axis on svg
-    var xAxis = d3
+    // set the scale and format of the X-axis
+    const xAxis = d3
         .axisBottom(xScale)
-        // .tickValues(xTickValues)
+        .tickSizeOuter(0)
+        .ticks(20)
         .tickFormat(d3.format("d"));
 
+
+    // create the X axis on heatmap
     heatmap
         .append("g")
         .attr("id", "x-axis")
@@ -76,36 +84,35 @@ d3.json(url).then(function (data) {
         .call(xAxis);
 
     // create the y axis scale
-    var yScale = d3
+    const yScale = d3
         .scaleBand()
-        .domain([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) //months
+        .domain(Array.from(new Array(12), (val, index) => index + 1)) // months [1..12]
         .range([0, height]);
 
-    // create the y axis on svg
-    var yAxis = d3
+    // create the heatmap y axis
+    const yAxis = d3
         .axisLeft(yScale)
         .tickValues(yScale.domain())
+        .tickSizeOuter(0)
         .tickFormat(d => months[d - 1]);
 
+    // append the y axis on heatmap specify class, id, and format the text
     heatmap
         .append("g")
         .attr("class", "y-axis")
         .attr("id", "y-axis")
-        .call(yAxis)
-        .selectAll("text")
-        .attr("font-weight", "normal")
-        .attr("fontSize", "2 em");
-    ;
+        .call(yAxis);
 
-    var varianceRange = d3.extent(plotData, d => d.variance);
-    var minTemp = baseTemp + varianceRange[0];
-    var maxTemp = baseTemp + varianceRange[1];
+    // get the variance range to use for color scale
+    const varianceRange = d3.extent(plotData, d => d.variance);
+    const minTemp = baseTemp + varianceRange[0];
+    const maxTemp = baseTemp + varianceRange[1];
 
-
-    var colorScale = d3
+    // define the color scale for heatmap
+    const colorScale = d3
         .scaleQuantize()
         .domain([minTemp, maxTemp])
-
+        // colors to use
         .range([
             "rgb(49, 54, 149)",
             "rgb(69, 117, 180)",
@@ -120,17 +127,13 @@ d3.json(url).then(function (data) {
             "rgb(165, 0, 38)"
         ]);
 
-    var numColors = colorScale.range().length;
-
-    // // create the cells on the svg
-    var cells = heatmap
+    // create the cells on the heatmap based on the data
+    const cells = heatmap
         .selectAll("rect")
         .data(plotData)
         .enter()
-        // .append("g")
         .append("rect")
         .attr("class", "cell")
-
         .attr("data-month", d => d.month - 1)
         .attr("data-year", d => d.year)
         .attr("data-temp", d => d.variance + baseTemp)
@@ -141,8 +144,8 @@ d3.json(url).then(function (data) {
         .attr("fill", d => colorScale(d.variance + baseTemp))
 
         .on("mouseover", function (d) {
-            var yPos = (d.month) * cellHeight - cellHeight / 2 + margin.top;
-            var temperature = d.variance + baseTemp;
+            const yPos = (d.month) * cellHeight - cellHeight / 2 + margin.top;
+            const temperature = d.variance + baseTemp;
             tooltip
                 .transition()
                 .duration(600)
@@ -173,22 +176,15 @@ d3.json(url).then(function (data) {
                 .style("opacity", 0);
         });
 
-    // determine desired tickvalues
-    var arr = [];
-    var diff = (maxTemp - minTemp) / numColors;
-    var next = minTemp;
+    const numColors = colorScale.range().length;
 
-    for (let index = 1; index < numColors; index++) {
-        next = next + diff;
-        arr.push(next);
-    }
-
+    // set legend cell height, width and legend width
     const legendRectHeight = 60,
         legendRectWidth = 50,
         legendWidth = numColors * legendRectWidth;
 
     //   Create a Legend
-    var legends = d3
+    const legends = d3
         .select("#legend")
         .append("svg")
         .attr("width", legendWidth + margin.left)
@@ -196,19 +192,26 @@ d3.json(url).then(function (data) {
         .append("g")
         .attr("transform", "translate( " + margin.left + "," + 40 + ")");
 
-    // // create the scale for the x axis
-    var lx = d3
+    // create the scale for the x axis of the legend
+    const lx = d3
         .scaleLinear()
         .domain([minTemp, maxTemp])
         .range([0, legendWidth]);
 
+
+    // determine desired tick values for legend
+    const arr = Array.from(new Array(numColors - 1), (val, index) => minTemp + ((maxTemp - minTemp) / numColors) * (index + 1));
+
     // create the x axis on legend
-    var lxAxis = d3.axisBottom(lx).tickSize(13)
+    const lxAxis = d3.axisBottom(lx)
+        .tickSize(13)
+        .tickSizeOuter(0)
         .tickValues(arr).tickFormat(function (n) {
             return parseFloat(Math.round(n * 100) / 100).toFixed(1);
         });
 
-    var legend = legends
+    // add the cells to the legend colored using the color scale from the heatmap
+    legends
         .selectAll(".legend")
         .data(colorScale.range())
         .enter()
@@ -219,7 +222,7 @@ d3.json(url).then(function (data) {
         .attr("height", legendRectHeight)
         .attr("x", (d, i) => i * legendRectWidth)
         .attr("fill", d => d);
-
+    // add the axis of the legend
     legends
         .append("g")
         .attr("transform", "translate(0," + legendRectHeight + ")")
