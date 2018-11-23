@@ -4,8 +4,7 @@ url =
     "https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json";
 
 const CELSIUS = "\u{2103}";
-const FAHRENHEIT = "\u{2109}";
-let inCelsius = true;
+
 var months = [
     "January",
     "February",
@@ -44,7 +43,7 @@ d3.json(url).then(function (data) {
         `);
 
     // dimension of heatmap
-    var margin = { top: 40, right: 20, bottom: 20, left: 100 };
+    var margin = { top: 60, right: 20, bottom: 20, left: 100 };
     var cellWidth = 5;
     var cellHeight = 43;
     var width = cellWidth * (yearRange[1] - yearRange[0]);
@@ -86,9 +85,7 @@ d3.json(url).then(function (data) {
     var yAxis = d3
         .axisLeft(yScale)
         .tickValues(yScale.domain())
-        .tickFormat(function (d) {
-            return months[d - 1];
-        });
+        .tickFormat(d => months[d - 1]);
 
     heatmap
         .append("g")
@@ -154,7 +151,7 @@ d3.json(url).then(function (data) {
                 .html(
                     d.year +
                     " - " +
-                    months[d.month] +
+                    months[d.month - 1] +
                     "<br/> Variance: " +
                     d3.format(".1f")(d.variance) +
                     CELSIUS +
@@ -166,8 +163,6 @@ d3.json(url).then(function (data) {
                 .attr("data-year", d.year)
                 .attr("data-temp", d3.format(".1f")(temperature))
 
-                // .style("left", d3.event.pageX + "px")
-                // .style("top", d3.event.pageY - 28 + "px");
                 .style("top", yPos + "px")
                 .style("left", d3.event.pageX + "px");
         })
@@ -207,14 +202,12 @@ d3.json(url).then(function (data) {
         .domain([minTemp, maxTemp])
         .range([0, legendWidth]);
 
-    // // create the x axis on legend
+    // create the x axis on legend
     var lxAxis = d3.axisBottom(lx).tickSize(13)
         .tickValues(arr).tickFormat(function (n) {
             return parseFloat(Math.round(n * 100) / 100).toFixed(1);
-            //  return n + "%"
         });
 
-    // var legendxAxis = d3.axisBottom(legendxScale).tickValues(arr);
     var legend = legends
         .selectAll(".legend")
         .data(colorScale.range())
